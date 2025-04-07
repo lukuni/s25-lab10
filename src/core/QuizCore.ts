@@ -1,85 +1,41 @@
-import quizData from '../data/quizData';
-import QuizQuestion from './QuizQuestion';
+// src/core/QuizCore.ts
 
-/**
- * The `QuizCore` class represents the core logic for managing a quiz, including
- * maintaining the quiz questions, tracking the user's progress, and calculating
- * their score.
- * 
- * It provides methods for navigating through the quiz, answering questions,
- * and retrieving information about the current state of the quiz.
- */
-class QuizCore {
-  private questions: QuizQuestion[];
-  private currentQuestionIndex: number;
-  private score: number;
-
-  /**
-   * Constructor
-   * @param filePath - The file path to a JSON file containing quiz data.
-   * @param callback - A callback function called when the quiz data is loaded.
-   */
-  constructor() {
-    this.questions = quizData;
-    this.currentQuestionIndex = 0;
-    this.score = 0;
-  }
-
-  /**
-   * Get the current question.
-   * @returns The current question or null if no questions are available.
-   */
-  public getCurrentQuestion(): QuizQuestion | null {
-    // Returns the current quiz question.
-    if (this.currentQuestionIndex >= 0 && this.currentQuestionIndex < this.questions.length) {
-      return this.questions[this.currentQuestionIndex];
-    }
-    return null;
-  }
-
-  /**
-   * Move to the next question.
-   */
-  public nextQuestion(): void {      
-    this.currentQuestionIndex++;
-  }
-
-  /**
-   * Checks if there is a next question available in the quiz.
-   *
-   * @returns {boolean} True if there is a next question, false if the quiz has been completed.
-   */
-  public hasNextQuestion(): boolean {
-    return this.currentQuestionIndex < this.questions.length - 1;
-  }
-
-  /**
-   * Record the user's answer and update the score.
-   * @param answer - The user's answer.
-   */
-  public answerQuestion(answer: string): void {
-    // Records the user's answer and updates the score if the answer is correct.
-    const currentQuestion = this.getCurrentQuestion();
-    if (currentQuestion && answer === currentQuestion.correctAnswer) {
-      this.score++;
-    }
-  }
-
-  /**
-   * Get the user's score.
-   * @returns The user's score.
-   */
-  public getScore(): number {
-    return this.score;
-  }
-
-  /**
-   * Get the total number of questions in the quiz.
-   * @returns The total number of questions.
-   */
-  public getTotalQuestions(): number {
-    return this.questions.length;
-  }
+export interface QuizQuestion {
+  question: string;
+  options: string[];
+  correctAnswer: string;
 }
 
-export default QuizCore;
+export interface QuizState {
+  questions: QuizQuestion[];
+  currentQuestionIndex: number;
+  selectedAnswer: string | null;
+  score: number;
+}
+
+export const initialQuestions: QuizQuestion[] = [
+  {
+    question: 'What is the capital of France?',
+    options: ['London', 'Berlin', 'Paris', 'Madrid'],
+    correctAnswer: 'Paris',
+  },
+  // Add more questions here
+];
+
+export const getScore = (state: QuizState): number => {
+  return state.questions.reduce((score, question, index) => {
+    return question.correctAnswer === state.selectedAnswer ? score + 1 : score;
+  }, 0);
+};
+
+export const hasNextQuestion = (state: QuizState): boolean => {
+  return state.currentQuestionIndex < state.questions.length - 1;
+};
+
+export const goToNextQuestion = (state: QuizState): QuizState => {
+  return {
+    ...state,
+    currentQuestionIndex: state.currentQuestionIndex + 1,
+    selectedAnswer: null,
+  };
+};

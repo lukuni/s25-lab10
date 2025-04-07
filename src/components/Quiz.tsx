@@ -1,41 +1,56 @@
-import React, { useState } from 'react'
-import './Quiz.css'
-import QuizQuestion from '../core/QuizQuestion';
-
-interface QuizState {
-  questions: QuizQuestion[]
-  currentQuestionIndex: number
-  selectedAnswer: string | null
-  score: number
-}
+import React, { useState } from 'react';
+import './Quiz.css';
+import { QuizState, initialQuestions, getScore, hasNextQuestion, goToNextQuestion } from '../core/QuizCore';
 
 const Quiz: React.FC = () => {
-  const initialQuestions: QuizQuestion[] = [
-    {
-      question: 'What is the capital of France?',
-      options: ['London', 'Berlin', 'Paris', 'Madrid'],
-      correctAnswer: 'Paris',
-    },
-  ];
   const [state, setState] = useState<QuizState>({
     questions: initialQuestions,
-    currentQuestionIndex: 0,  // Initialize the current question index.
-    selectedAnswer: null,  // Initialize the selected answer.
-    score: 0,  // Initialize the score.
+    currentQuestionIndex: 0,
+    selectedAnswer: null,
+    score: 0,
+    answered: false, // Track if the question is answered
   });
 
   const handleOptionSelect = (option: string): void => {
-    setState((prevState) => ({ ...prevState, selectedAnswer: option }));
-  }
-
+    // Only allow option selection if no answer has been selected
+    if (!state.answered) {
+      setState((prevState) => ({
+        ...prevState,
+        selectedAnswer: option,
+      }));
+    }
+  };
 
   const handleButtonClick = (): void => {
-    // Task3: Implement the logic for button click, such as moving to the next question.
-  } 
+    const { selectedAnswer, score, currentQuestionIndex, questions } = state;
 
-  const { questions, currentQuestionIndex, selectedAnswer, score } = state;
+    if (!selectedAnswer) return; // Ensure an answer is selected before proceeding
+
+    // Check if the selected answer is correct and update score
+    if (selectedAnswer === questions[currentQuestionIndex].correctAnswer) {
+      setState((prevState) => ({
+        ...prevState,
+        score: prevState.score + 1,  // Increase score if answer is correct
+      }));
+    }
+
+    // Mark question as answered
+    setState((prevState) => ({
+      ...prevState,
+      answered: true,
+    }));
+  };
+
+  const handleNextQuestion = (): void => {
+    if (hasNextQuestion(state)) {
+      setState(goToNextQuestion(state));
+    }
+  };
+
+  const { questions, currentQuestionIndex, selectedAnswer, score, answered } = state;
   const currentQuestion = questions[currentQuestionIndex];
 
+  // Render the final score when quiz is completed
   if (!currentQuestion) {
     return (
       <div>
@@ -52,21 +67,42 @@ const Quiz: React.FC = () => {
     
       <h3>Answer Options:</h3>
       <ul>
-        {currentQuestion.options.map((option) => (
-          <li
-            key={option}
-            onClick={() => handleOptionSelect(option)}
-            className={selectedAnswer === option ? 'selected' : ''}
-          >
-            {option}
-          </li>
-        ))}
+        {currentQuestion.options.map((option) => {
+          // Determine the class to apply to each option
+          let optionClass = '';
+          if (answered) {
+            if (option === selectedAnswer) {
+              // Highlight the selected answer
+              optionClass = option === currentQuestion.correctAnswer ? 'correct' : 'incorrect';
+            } else if (option === currentQuestion.correctAnswer) {
+              // Show the correct answer when user selects the wrong one
+              optionClass = 'correct';
+            }
+          }
+
+          return (
+            <li
+              key={option}
+              onClick={() => handleOptionSelect(option)}
+              className={`${selectedAnswer === option ? 'selected' : ''} ${optionClass}`}
+              style={{ pointerEvents: answered ? 'none' : 'auto' }} // Disable interaction after selecting an answer
+            >
+              {option}
+            </li>
+          );
+        })}
       </ul>
 
       <h3>Selected Answer:</h3>
       <p>{selectedAnswer ?? 'No answer selected'}</p>
 
-      <button onClick={handleButtonClick}>Next Question</button>
+      <button onClick={handleButtonClick} disabled={answered || !selectedAnswer}>
+        {hasNextQuestion(state) ? 'Next Question' : 'Submit'}
+      </button>
+
+      {answered && hasNextQuestion(state) && (
+        <button onClick={handleNextQuestion}>Next Question</button>
+      )}
     </div>
   );
 };
