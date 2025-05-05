@@ -1,6 +1,8 @@
+// src/components/Quiz.tsx
+
 import React, { useState } from 'react';
 import './Quiz.css';
-import { QuizState, initialQuestions, getScore, hasNextQuestion, goToNextQuestion } from '../core/QuizCore';
+import { QuizState, initialQuestions, hasNextQuestion, goToNextQuestion } from '../core/QuizCore';
 
 const Quiz: React.FC = () => {
   const [state, setState] = useState<QuizState>({
@@ -8,35 +10,26 @@ const Quiz: React.FC = () => {
     currentQuestionIndex: 0,
     selectedAnswer: null,
     score: 0,
-    answered: false, // Track if the question is answered
+    answered: false,
   });
 
   const handleOptionSelect = (option: string): void => {
-    // Only allow option selection if no answer has been selected
     if (!state.answered) {
-      setState((prevState) => ({
-        ...prevState,
+      setState((prev) => ({
+        ...prev,
         selectedAnswer: option,
       }));
     }
   };
 
   const handleButtonClick = (): void => {
-    const { selectedAnswer, score, currentQuestionIndex, questions } = state;
+    if (!state.selectedAnswer) return;
 
-    if (!selectedAnswer) return; // Ensure an answer is selected before proceeding
+    const isCorrect = state.selectedAnswer === state.questions[state.currentQuestionIndex].correctAnswer;
 
-    // Check if the selected answer is correct and update score
-    if (selectedAnswer === questions[currentQuestionIndex].correctAnswer) {
-      setState((prevState) => ({
-        ...prevState,
-        score: prevState.score + 1,  // Increase score if answer is correct
-      }));
-    }
-
-    // Mark question as answered
-    setState((prevState) => ({
-      ...prevState,
+    setState((prev) => ({
+      ...prev,
+      score: isCorrect ? prev.score + 1 : prev.score,
       answered: true,
     }));
   };
@@ -50,7 +43,6 @@ const Quiz: React.FC = () => {
   const { questions, currentQuestionIndex, selectedAnswer, score, answered } = state;
   const currentQuestion = questions[currentQuestionIndex];
 
-  // Render the final score when quiz is completed
   if (!currentQuestion) {
     return (
       <div>
@@ -64,18 +56,15 @@ const Quiz: React.FC = () => {
     <div>
       <h2>Quiz Question:</h2>
       <p>{currentQuestion.question}</p>
-    
+
       <h3>Answer Options:</h3>
       <ul>
         {currentQuestion.options.map((option) => {
-          // Determine the class to apply to each option
           let optionClass = '';
           if (answered) {
             if (option === selectedAnswer) {
-              // Highlight the selected answer
               optionClass = option === currentQuestion.correctAnswer ? 'correct' : 'incorrect';
             } else if (option === currentQuestion.correctAnswer) {
-              // Show the correct answer when user selects the wrong one
               optionClass = 'correct';
             }
           }
@@ -85,7 +74,7 @@ const Quiz: React.FC = () => {
               key={option}
               onClick={() => handleOptionSelect(option)}
               className={`${selectedAnswer === option ? 'selected' : ''} ${optionClass}`}
-              style={{ pointerEvents: answered ? 'none' : 'auto' }} // Disable interaction after selecting an answer
+              style={{ pointerEvents: answered ? 'none' : 'auto' }}
             >
               {option}
             </li>
@@ -96,12 +85,18 @@ const Quiz: React.FC = () => {
       <h3>Selected Answer:</h3>
       <p>{selectedAnswer ?? 'No answer selected'}</p>
 
-      <button onClick={handleButtonClick} disabled={answered || !selectedAnswer}>
-        {hasNextQuestion(state) ? 'Next Question' : 'Submit'}
-      </button>
+      {!answered && (
+        <button onClick={handleButtonClick} disabled={!selectedAnswer}>
+          Submit
+        </button>
+      )}
 
       {answered && hasNextQuestion(state) && (
         <button onClick={handleNextQuestion}>Next Question</button>
+      )}
+
+      {answered && !hasNextQuestion(state) && (
+        <p className="quiz-completed">You've completed the quiz!</p>
       )}
     </div>
   );

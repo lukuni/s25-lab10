@@ -1,14 +1,14 @@
-import React from 'react'
-import Quiz from './components/Quiz.tsx'
+// src/App.tsx
+
+import React from 'react';
+import Quiz from './components/Quiz'; // ✅ .tsx хаяг авсан
 
 const App: React.FC = () => {
   return (
-    <div className='App'>
-      <h1>My React Quiz</h1>
+    <div>
       <Quiz />
     </div>
   );
-}
+};
 
 export default App;
-

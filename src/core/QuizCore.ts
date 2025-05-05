@@ -11,6 +11,7 @@ export interface QuizState {
   currentQuestionIndex: number;
   selectedAnswer: string | null;
   score: number;
+  answered: boolean; // ✅ Шинээр нэмсэн property
 }
 
 export const initialQuestions: QuizQuestion[] = [
@@ -19,14 +20,8 @@ export const initialQuestions: QuizQuestion[] = [
     options: ['London', 'Berlin', 'Paris', 'Madrid'],
     correctAnswer: 'Paris',
   },
-  // Add more questions here
+  // Нэмэлт асуултууд оруулж болно
 ];
-
-export const getScore = (state: QuizState): number => {
-  return state.questions.reduce((score, question, index) => {
-    return question.correctAnswer === state.selectedAnswer ? score + 1 : score;
-  }, 0);
-};
 
 export const hasNextQuestion = (state: QuizState): boolean => {
   return state.currentQuestionIndex < state.questions.length - 1;
@@ -37,5 +32,6 @@ export const goToNextQuestion = (state: QuizState): QuizState => {
     ...state,
     currentQuestionIndex: state.currentQuestionIndex + 1,
     selectedAnswer: null,
+    answered: false, // ✅ дараагийн асуулт руу шилжихэд хариулаагүй болгоно
   };
 };
